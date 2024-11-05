@@ -7,7 +7,7 @@ class Scanner(Lexer):
               DIV_ASSIGN, SMALLER_OR_EQUAL, BIGGER_OR_EQUAL, NONEQUAL, EQUAL, ELSE, FOR, WHILE, BREAK,
               CONTINUE, RETURN, EYE, ZEROS, ONES, PRINT, ID, STRING, INTNUM, FLOATNUM}
 
-    literals = {'+', '-', '*', '=', ',', '<', '>', '(', ')', '[', ']', '{', '}', ':', '\'', ',', ';', }
+    literals = {'+', '-', '*', '=', ',', '<', '>', '(', ')', '[', ']', '{', '}', ':', '\'', ',', ';','/', }
 
     # matrix operators
     DOT_ADD = r'\.\+'
@@ -50,6 +50,7 @@ class Scanner(Lexer):
     ID['zeros'] = ZEROS
     ID['ones'] = ONES
     ID['print'] = PRINT
+    ID['eye'] = EYE
 
 
     # ignore newline wrzucone tutaj po maupce zamiast oddzielnie u gory, a potem to tutaj
