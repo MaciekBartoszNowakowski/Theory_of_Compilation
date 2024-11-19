@@ -2,6 +2,11 @@ class Node(object):
     pass
 
 
+class Program(Node):
+    def __init__(self, instructions):
+        self.instructions = instructions
+
+
 class IntNum(Node):
     def __init__(self, value):
         self.value = value
@@ -22,6 +27,33 @@ class Variable(Node):
         self.name = name
 
 
+class If(Node):
+    def __init__(self, condition, body):
+        self.condition = condition
+        self.body = body
+
+
+class IfElse(Node):
+    def __init__(self, condition, if_body, else_body):
+        self.condition = condition
+        self.if_body = if_body
+        self.else_body = else_body
+
+
+class For(Node):
+    def __init__(self, var, start, end, body):
+        self.var = var
+        self.start = start
+        self.end = end
+        self.body = body
+
+
+class While(Node):
+    def __init__(self, condition, body):
+        self.condition = condition
+        self.body = body
+
+
 class BinExpr(Node):
     def __init__(self, op, left, right):
         self.op = op
@@ -33,39 +65,6 @@ class UnaryExpr(Node):
     def __init__(self, op, operand):
         self.op = op
         self.operand = operand
-
-
-class Program(Node):
-    def __init__(self, condition, body):
-        self.condition = condition
-        self.body = body
-
-
-class IfStatement(Node):
-    def __init__(self, condition, body):
-        self.condition = condition
-        self.body = body
-
-
-class IfElseStatement(Node):
-    def __init__(self, condition, if_body, else_body):
-        self.condition = condition
-        self.if_body = if_body
-        self.else_body = else_body
-
-
-class ForLoop(Node):
-    def __init__(self, var, start, end, body):
-        self.var = var
-        self.start = start
-        self.end = end
-        self.body = body
-
-
-class WhileLoop(Node):
-    def __init__(self, condition, body):
-        self.condition = condition
-        self.body = body
 
 
 class Assignment(Node):
@@ -82,18 +81,13 @@ class ArrayAccess(Node):
         self.col = col
 
 
-class Number(Node):
-    def __init__(self, value):
-        self.value = value
-
-
-class MatrixFunction(Node):
-    def __init(self, function, argument):
+class FunctionOnMatrix(Node):
+    def __init__(self, function, argument):
         self.function = function
         self.argument = argument
 
 
-class ArrayCreation(Node):
+class MakeArray(Node):
     def __init__(self, elements):
         self.elements = elements
 
@@ -103,14 +97,14 @@ class Block(Node):
         self.instructions = instructions
 
 
-class Print(Node):
-    def __init__(self, values):
-        self.values = values
-
-
 class Break(Node):
     def __init__(self):
         pass
+
+
+class Print(Node):
+    def __init__(self, values):
+        self.values = values
 
 
 class Continue(Node):

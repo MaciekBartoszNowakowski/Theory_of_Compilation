@@ -1,13 +1,12 @@
 from sly import Parser
 from scanner_sly import Scanner
+from AST import *
 
 
 class MyParser(Parser):
     tokens = Scanner.tokens | Scanner.literals
     debugfile = 'parser.out'
 
-
-    # dodać minus unarny
     precedence = (
         ('nonassoc', "IFX"),
         ('nonassoc', "ELSE"),
@@ -16,166 +15,164 @@ class MyParser(Parser):
         ("left", 'DOT_ADD', 'DOT_SUB'),
         ("left", '*', '/'),
         ("left", 'DOT_MUL', 'DOT_DIV'),
-        ("right", "UMINUS")
+        ("right", "UMINUS"),
+        ("left", "'")
     )
 
     @_('instructions')
     def start(self, p):
         return Program(p[0])
 
-    @_('instruction',
-       'instruction instructions',
-       '"{" instructions "}"'
-       )
+    @_('instruction')
     def instructions(self, p):
-        pass
+        return [p.instruction]
 
-    #tutaj dodac {instructions}
-    @_('instr_assign ";"',
-       'instr_return ";"',
-       'instr_loop',
-       'instr_if',
-       'instr_flow ";"',
-       'instr_print ";"'
-       )
+    @_('instruction instructions')
+    def instructions(self, p):
+        return [p.instruction] + p.instructions
+
+    @_('"{" instructions "}"')
+    def instructions(self, p):
+        return p.instructions
+
+    @_('assignable "=" expr ";"')
+    def instruction(self, p):
+        return Assignment(p[1], p.assignable, p.expr)
+
+    @_('assignable ADD_ASSIGN expr ";"',
+       'assignable SUB_ASSIGN expr ";"',
+       'assignable MUL_ASSIGN expr ";"',
+       'assignable DIV_ASSIGN expr ";"')
+    def instruction(self, p):
+        return Assignment(p[1], p.assignable, p.expr)
+
+    @_('ID "[" expr "," expr "]"')
+    def assignable(self, p):
+        return ArrayAccess(Variable(p.ID), p[2], p[4])
+
+    @_("ID")
+    def assignable(self, p):
+        return Variable(p.ID)
+
+    @_('IF "(" condition ")" block ELSE block')
+    def instruction(self, p):
+        return IfElse(p.condition, p.block0, p.block1)
+
+    @_('IF "(" condition ")" block %prec IFX')
+    def instruction(self, p):
+        return If(p.condition, p.block)
+
+    @_('expr "<" expr',
+       'expr ">" expr',
+       'expr SMALLER_OR_EQUAL expr',
+       'expr BIGGER_OR_EQUAL expr',
+       'expr NONEQUAL expr',
+       'expr EQUAL expr', )
+    def condition(self, p):
+        return BinExpr(p[1], p.expr0, p.expr1)
+
+    @_('FOR ID "=" expr ":" expr block')
+    def instruction(self, p):
+        return For(Variable(p.ID), p.expr0, p.expr1, p.block)
+
+    @_('WHILE "(" condition ")" block')
+    def instruction(self, p):
+        return While(p.condition, p.block)
+
+    @_('BREAK ";"')
+    def instruction(self, p):
+        return Break
+
+    @_('CONTINUE ";"')
+    def instruction(self, p):
+        return Continue
+
+    @_('"{" instructions "}"')
+    def block(self, p):
+        return Block(p.instructions)
+
+    @_('instruction')
+    def block(self, p):
+        return Block([p.instruction])
+
+    @_('RETURN expr ";"')
     def instruction(self, p):
         pass
 
-    # if
-    # wymienic statement na instruction
-    @_('IF "(" expr ")" statement ELSE statement',
-       'IF "(" expr ")" statement %prec IFX')
-    def instr_if(self, p):
-        pass
+    @_('PRINT STRING ";"')
+    def instruction(self, p):
+        return Print([String(p.STRING)])
 
-    @_(' "{" instructions "}"',
-       'instruction')
-    def statement(self, p):
-        pass
+    @_('PRINT sequence_element ";"')
+    def instruction(self, p):
+        return Print(p.sequence_element)
 
-    # loop
-    @_('WHILE "(" expr ")" "{" instructions "}"',
-       'WHILE "(" expr ")" instruction',
-       'FOR instr_assign statement')
-    def instr_loop(self, p):
-        pass
+    @_('ID "," sequence_element')
+    def sequence_element(self, p):
+        return [Variable(p.ID)] + p.sequence_element
 
-    @_('BREAK',
-       'CONTINUE')
-    def instr_flow(self, p):
-        pass
+    @_('ID')
+    def sequence_element(self, p):
+        return [Variable(p.ID)]
 
-    # return
-    @_('RETURN expr',
-       'RETURN')
-    def instr_return(self, p):
-        pass
-
-    @_('PRINT variables')
-    def instr_print(self, p):
-        pass
-
-    # assignations
-    @_('assignable "=" expr',
-       'assignable ADD_ASSIGN expr',
-       'assignable SUB_ASSIGN expr',
-       'assignable MUL_ASSIGN expr',
-       'assignable DIV_ASSIGN expr')
-    def instr_assign(self, p):
-        pass
-
-    # math and comparisons
-    @_('expr SMALLER_OR_EQUAL expr',
-       'expr BIGGER_OR_EQUAL expr',
-       'expr NONEQUAL expr',
-       'expr EQUAL expr',
-       'expr ">" expr',
-       'expr "<" expr',
+    @_('expr "+" expr',
+       'expr "-" expr',
+       'expr "*" expr',
+       'expr "/" expr',
        'expr DOT_ADD expr',
        'expr DOT_SUB expr',
        'expr DOT_MUL expr',
        'expr DOT_DIV expr',
-       'matrix',
-       'vector',
-       'matrix_create_expr',
-       'expr "\'" ',
-       'expr "+" expr',
-       'expr "-" expr',
-       'expr "*" expr',
-       'expr "/" expr')
+       )
     def expr(self, p):
-        pass
+        return BinExpr(p[1], p[0], p[2])
 
+    # minus unarny
     @_('"-" expr %prec UMINUS')
     def expr(self, p):
-        pass
+        return UnaryExpr(p[0], p.expr)
 
-    # id
-    @_("ID")
+    @_('expr "\'"')
     def expr(self, p):
-        pass
+        return UnaryExpr('transpose', p.expr)
 
-    # data types
-    @_('FLOATNUM',
-       'INTNUM')
+    @_('"(" expr ")"')
     def expr(self, p):
-        pass
+        return p.expr
 
-    # assigns
-    @_('ID',
-       'matrix_ele',
-       'vector_ele')
-    def assignable(self, p):
-        pass
+    @_('FLOATNUM')
+    def expr(self, p):
+        return FloatNum(p[0])
 
-    #     matrix
-    @_('"[" vectors "]"')
-    def matrix(self, p):
-        pass
+    @_('INTNUM')
+    def expr(self, p):
+        return IntNum(p[0])
 
-    #     creating matrix
-    @_('ZEROS',
-       'ONES',
-       'EYE')
-    def matrix_create_fun(self, p):
-        pass
+    @_("STRING")
+    def expr(self, p):
+        return String(p.STRING)
 
-    @_('matrix_create_fun "(" expr ")"')
-    def matrix_create_expr(self, p):
-        pass
+    @_('ID')
+    def expr(self, p):
+        return Variable(p.ID)
 
-    @_('ID "[" INTNUM "," INTNUM "]"')
-    def matrix_ele(self, p):
-        pass
+    @_('ZEROS "(" expr ")"',
+       'ONES "(" expr ")"',
+       'EYE "(" expr ")"')
+    def expr(self, p):
+        return FunctionOnMatrix(p[0], p.expr)
 
-    # vector
-    @_('"[" variables "]"',
-       'variable ":" variable')
-    def vector(self, p):
-        pass
+    @_('"[" array_element "]"')
+    def expr(self, p):
+        return MakeArray(p.array_element)
 
-    @_('vector',
-       'vector "," vectors')
-    def vectors(self, p):
-        pass
+    @_('expr "," array_element')
+    def array_element(self, p):
+        return [p.expr] + p.array_element
 
-    @_('ID "[" INTNUM "]"')
-    def vector_ele(self, p):
-        pass
-
-    # variable
-    @_("INTNUM",
-       "FLOATNUM",
-       "STRING",
-       'assignable')
-    def variable(self, p):
-        pass
-
-
-    @_('variable "," variables',
-       'variable')
-    def variables(self, p):
-        pass
+    @_('expr')
+    def array_element(self, p):
+        return [p.expr]
 
     def error(self, p):
         if p:
