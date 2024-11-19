@@ -7,20 +7,21 @@ class MyParser(Parser):
     debugfile = 'parser.out'
 
 
-
+    # dodać minus unarny
     precedence = (
         ('nonassoc', "IFX"),
         ('nonassoc', "ELSE"),
-        ("left", '<', '>', 'EQUAL', 'NONEQUAL', 'BIGGER_OR_EQUAL', 'SMALLER_OR_EQUAL'),
+        ("nonassoc", '<', '>', 'EQUAL', 'NONEQUAL', 'BIGGER_OR_EQUAL', 'SMALLER_OR_EQUAL'),
         ("left", '+', '-'),
-        ("left", '*', '/'),
         ("left", 'DOT_ADD', 'DOT_SUB'),
+        ("left", '*', '/'),
         ("left", 'DOT_MUL', 'DOT_DIV'),
+        ("right", "UMINUS")
     )
 
     @_('instructions')
     def start(self, p):
-        pass
+        return Program(p[0])
 
     @_('instruction',
        'instruction instructions',
@@ -29,23 +30,25 @@ class MyParser(Parser):
     def instructions(self, p):
         pass
 
+    #tutaj dodac {instructions}
     @_('instr_assign ";"',
        'instr_return ";"',
        'instr_loop',
        'instr_if',
-       'instr_loop_flow ";"',
+       'instr_flow ";"',
        'instr_print ";"'
        )
     def instruction(self, p):
         pass
 
     # if
+    # wymienic statement na instruction
     @_('IF "(" expr ")" statement ELSE statement',
        'IF "(" expr ")" statement %prec IFX')
     def instr_if(self, p):
         pass
 
-    @_(' "{" instruction "}"',
+    @_(' "{" instructions "}"',
        'instruction')
     def statement(self, p):
         pass
@@ -59,7 +62,7 @@ class MyParser(Parser):
 
     @_('BREAK',
        'CONTINUE')
-    def instr_loop_flow(self, p):
+    def instr_flow(self, p):
         pass
 
     # return
@@ -72,8 +75,7 @@ class MyParser(Parser):
     def instr_print(self, p):
         pass
 
-
-
+    # assignations
     @_('assignable "=" expr',
        'assignable ADD_ASSIGN expr',
        'assignable SUB_ASSIGN expr',
@@ -82,7 +84,7 @@ class MyParser(Parser):
     def instr_assign(self, p):
         pass
 
-    # math
+    # math and comparisons
     @_('expr SMALLER_OR_EQUAL expr',
        'expr BIGGER_OR_EQUAL expr',
        'expr NONEQUAL expr',
@@ -93,7 +95,6 @@ class MyParser(Parser):
        'expr DOT_SUB expr',
        'expr DOT_MUL expr',
        'expr DOT_DIV expr',
-       '"-" expr',
        'matrix',
        'vector',
        'matrix_create_expr',
@@ -102,6 +103,10 @@ class MyParser(Parser):
        'expr "-" expr',
        'expr "*" expr',
        'expr "/" expr')
+    def expr(self, p):
+        pass
+
+    @_('"-" expr %prec UMINUS')
     def expr(self, p):
         pass
 
