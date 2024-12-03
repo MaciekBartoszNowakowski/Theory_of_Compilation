@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 
-from time import sleep
 from symtable import Symbol
 
 
@@ -18,13 +17,11 @@ class SymbolTable(object):
         self.parent = parent
         self.name = name
         self.symbols = {}
-    #
 
     def put(self, name, symbol):
         if name in self.symbols:
             print(f"Variable {name} already defined")
         self.symbols[name] = symbol
-    #
 
     def get(self, name):
         searched_table = self
@@ -34,11 +31,9 @@ class SymbolTable(object):
             else:
                 searched_table = searched_table.getParentScope()
         return
-    #
 
     def getParentScope(self):
         return self.parent
-    #
 
     def all_names(self):
         names = [self.name]
@@ -51,9 +46,7 @@ class SymbolTable(object):
 
     def pushScope(self, name):
         return SymbolTable(self, name)
-    #
 
     def popScope(self):
         self.name = None
         return self.parent
-    #
