@@ -54,6 +54,11 @@ class TypeChecker(NodeVisitor):
         for instruction in node.instructions:
             self.visit(instruction)
 
+    def visit_Block(self, node):
+        for instruction in node.instructions:
+            self.visit(instruction)
+
+
     def visit_If(self, node):
 
         self.visit(node.condition)
@@ -97,42 +102,34 @@ class TypeChecker(NodeVisitor):
                 if value < 0:
                     self.error(f"{node.function} argument cannot be less than 0", node)
             except ValueError:
-                self.error(f"{node.function} argument must be an integer", node)
+                self.error(f"{node.function} argument must be an integer got FloatNum instead", node)
 
         elif not isinstance(node.argument, AST.Variable):
             self.error(f"{node.function} argument is not recognized", node)
 
-    def visit_Number(self, node):
-        pass
-
-    def visit_FloatNum(self, node):
-        if not isinstance(node.value, float):
-            self.error("Unrecognized type of FloatNum" + type(node.value), node)
-
-
     def visit_ArrayCreation(self, node):
+
+        size = None
 
         if node.elements is None:
             pass
 
-        matrix_size = None
-
         for element in node.elements:
 
             if isinstance(element, AST.ArrayCreation):
-                curr_element_size = len(element.elements)
+                curr_size = len(element.elements)
 
-                if matrix_size is None:
-                    matrix_size = curr_element_size
-                elif matrix_size != curr_element_size:
-                    self.error(f"Matrix size is invalid", element)
+                if size is None:
+                    size = curr_size
+                elif size != curr_size:
+                    self.error(f"Matrix size is invalid. Expected {size} got {curr_size}", element)
 
             elif isinstance(element, (AST.Number, AST.IntNum, AST.FloatNum)):
-                curr_element_size = 1
-                if matrix_size == None:
-                    matrix_size = 1
-                elif matrix_size != curr_element_size:
-                    self.error(f"Matrix size is invalid", element)
+                curr_size = 1
+                if size is None:
+                    size = 1
+                elif size != curr_size:
+                    self.error(f"Matrix size is invalid {size} got {curr_size}", element)
 
             elif isinstance(element, AST.Variable):
                 if not self.symbolTable.get(element.name):
@@ -157,9 +154,6 @@ class TypeChecker(NodeVisitor):
         self.visit(node.body)
         self.symbolTable = self.symbolTable.popScope()
 
-    def visit_Block(self, node):
-        for instruction in node.instructions:
-            self.visit(instruction)
 
     def visit_While(self, node):
         self.visit(node.condition)
@@ -167,10 +161,6 @@ class TypeChecker(NodeVisitor):
         self.symbolTable = self.symbolTable.pushScope("loop")
         self.visit(node.body)
         self.symbolTable = self.symbolTable.popScope()
-
-    def visit_Print(self, node):
-        for value in node.values:
-            self.visit(value)
 
     def visit_Break(self, node):
         if "loop" not in self.symbolTable.all_names():
@@ -180,8 +170,23 @@ class TypeChecker(NodeVisitor):
         if "loop" not in self.symbolTable.all_names():
             self.error(f"Instruction continue outside of loop", node)
 
+    def visit_Print(self, node):
+        for value in node.values:
+            self.visit(value)
+
     def visit_Return(self, node):
         self.visit(node.value)
 
     def visit_String(self, node):
         pass
+
+    def visit_Number(self, node):
+        pass
+
+    def visit_FloatNum(self, node):
+        if not isinstance(node.value, float):
+            self.error("Unrecognized type of FloatNum" + type(node.value), node)
+
+    def visit_IntNum(self, node):
+        if not isinstance(node.value, int):
+            self.error("Unrecognized type of IntNum" + type(node.value), node)

@@ -11,3 +11,21 @@ return x+1;
 return 2*x;
 
 print x;
+
+for i = 1:N {
+    for j = i:M {
+        print i, j;
+        continue;
+    }
+    break;
+}
+break;
+
+
+for i = 1:N {
+    for j = i:M {
+        print i, j;
+        continue;
+    }
+}
+break;

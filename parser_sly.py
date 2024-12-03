@@ -110,7 +110,7 @@ class MyParser(Parser):
 
     @_('ID "," sequence_element')
     def sequence_element(self, p):
-        return [Variable(p.ID)] + p.sequence_element
+        return [Variable(p.ID, p.lineno)] + p.sequence_element
 
     @_('ID')
     def sequence_element(self, p):

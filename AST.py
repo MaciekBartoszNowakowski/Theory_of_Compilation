@@ -34,9 +34,10 @@ class Variable(Node):
 
 
 class If(Node):
-    def __init__(self, condition, body):
+    def __init__(self, condition, body, line):
         self.condition = condition
         self.body = body
+        self.line = line
 
 
 class IfElse(Node):
