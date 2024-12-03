@@ -9,7 +9,7 @@ class NodeVisitor(object):
         visitor = getattr(self, method, self.generic_visit)
         return visitor(node)
 
-    def generic_visit(self, node):  # Called if no explicit visitor function exists for a node.
+    def generic_visit(self, node):
         if isinstance(node, list):
             for elem in node:
                 self.visit(elem)
@@ -38,8 +38,6 @@ class TypeChecker(NodeVisitor):
         print(f"Error line {line}: {message}")
 
     def visit_BinExpr(self, node):
-        # alternative usage,
-        # requires definition of accept method in class Node
         type1 = self.visit(node.left)  # type1 = node.left.accept(self)
         type2 = self.visit(node.right)  # type2 = node.right.accept(self)
         op = node.op
@@ -48,7 +46,6 @@ class TypeChecker(NodeVisitor):
     def visit_UnaryExpr(self, node):
         self.visit(node.operand)
 
-    # to-do: check whether value match the type ?
     def visit_Variable(self, node):
         if not self.symbolTable.get(node.name):
             self.error(f"Variable {node.name} was not defined", node)
@@ -57,14 +54,14 @@ class TypeChecker(NodeVisitor):
         for instruction in node.instructions:
             self.visit(instruction)
 
-    def visit_IfStatement(self, node):
+    def visit_If(self, node):
 
         self.visit(node.condition)
         self.symbolTable.pushScope("if")
         self.visit(node.body)
         self.symbolTable.popScope()
 
-    def visit_IfElseStatement(self, node):
+    def visit_IfElse(self, node):
 
         self.visit(node.condition)
         self.symbolTable.pushScope("if")
@@ -72,8 +69,6 @@ class TypeChecker(NodeVisitor):
         self.visit(node.else_body)
         self.symbolTable.popScope()
 
-    # add checking if assignment to matrix/vector element is correct
-    # add checking if type is correct (?)
     def visit_AssignmentOrCreation(self, node):
 
         if self.symbolTable.get(node.target.name):
@@ -83,7 +78,6 @@ class TypeChecker(NodeVisitor):
 
         self.visit(node.value)
 
-    # add checking if assignment to matrix/vector element is correct
     def visit_Assignment(self, node):
         type = self.visit(node.value)
 
@@ -111,19 +105,14 @@ class TypeChecker(NodeVisitor):
     def visit_Number(self, node):
         pass
 
-    def visit_IntNum(self, node):
-        if not isinstance(node.value, int):
-            self.error("Unrecogniezed type of IntNum" + type(node.value), node)  # I hope it would never trigger
-
     def visit_FloatNum(self, node):
         if not isinstance(node.value, float):
             self.error("Unrecognized type of FloatNum" + type(node.value), node)
 
-    # to-do: check if variable creating matrix/vector is valid (has type matching other things there)
-    def visit_ArrayCreation(self, node):  # creation of vector or matrix
+
+    def visit_ArrayCreation(self, node):
 
         if node.elements is None:
-            # empty init - like v = [] or m = [[]]
             pass
 
         matrix_size = None
@@ -149,14 +138,13 @@ class TypeChecker(NodeVisitor):
                 if not self.symbolTable.get(element.name):
                     self.error(f"Variable {element.name} was not defined", element)
 
-    # to-do: check if variable do not get out of matrix size
     def visit_ArrayAccess(self, node):
         self.visit(node.array)
         self.visit(node.row)
         if node.col is not None:
             self.visit(node.col)
 
-    def visit_ForLoop(self, node):
+    def visit_For(self, node):
         self.visit(node.start)
         self.visit(node.end)
 
@@ -173,7 +161,7 @@ class TypeChecker(NodeVisitor):
         for instruction in node.instructions:
             self.visit(instruction)
 
-    def visit_WhileLoop(self, node):
+    def visit_While(self, node):
         self.visit(node.condition)
 
         self.symbolTable = self.symbolTable.pushScope("loop")

@@ -60,11 +60,11 @@ class MyParser(Parser):
 
     @_('IF "(" condition ")" block ELSE block')
     def instruction(self, p):
-        return IfElseStatement(p.condition, p.block0, p.block1, p.lineno)
+        return IfElse(p.condition, p.block0, p.block1, p.lineno)
 
     @_('IF "(" condition ")" block %prec IFX')
     def instruction(self, p):
-        return IfStatement(p.condition, p.block, p.lineno)
+        return If(p.condition, p.block, p.lineno)
 
     @_('expr "<" expr',
        'expr ">" expr',
@@ -77,11 +77,11 @@ class MyParser(Parser):
 
     @_('FOR ID "=" expr ":" expr block')
     def instruction(self, p):
-        return ForLoop(Variable(p.ID, p.lineno), p.expr0, p.expr1, p.block, p.lineno)
+        return For(Variable(p.ID, p.lineno), p.expr0, p.expr1, p.block, p.lineno)
 
     @_('WHILE "(" condition ")" block')
     def instruction(self, p):
-        return WhileLoop(p.condition, p.block, p.lineno)
+        return While(p.condition, p.block, p.lineno)
 
     @_('BREAK ";"')
     def instruction(self, p):

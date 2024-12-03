@@ -33,13 +33,13 @@ class Variable(Node):
         self.line = line
 
 
-class IfStatement(Node):
+class If(Node):
     def __init__(self, condition, body):
         self.condition = condition
         self.body = body
 
 
-class IfElseStatement(Node):
+class IfElse(Node):
     def __init__(self, condition, if_body, else_body, line):
         self.condition = condition
         self.if_body = if_body
@@ -47,7 +47,7 @@ class IfElseStatement(Node):
         self.line = line
 
 
-class ForLoop(Node):
+class For(Node):
     def __init__(self, var, start, end, body, line):
         self.var = var
         self.start = start
@@ -56,7 +56,7 @@ class ForLoop(Node):
         self.line = line
 
 
-class WhileLoop(Node):
+class While(Node):
     def __init__(self, condition, body, line):
         self.condition = condition
         self.body = body

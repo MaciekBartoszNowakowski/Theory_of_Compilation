@@ -35,14 +35,14 @@ class TreePrinter:
     def printTree(self, indent=0):
         print("| " * indent + str(self.name))
 
-    @addToClass(AST.IfStatement)
+    @addToClass(AST.If)
     def printTree(self, indent=0):
         print("| " * indent + "IF")
         self.condition.printTree(indent + 1)
         print("| " * indent + "THEN")
         self.body.printTree(indent + 1)
 
-    @addToClass(AST.IfElseStatement)
+    @addToClass(AST.IfElse)
     def printTree(self, indent=0):
         print("| " * indent + "IF")
         self.condition.printTree(indent + 1)
@@ -51,7 +51,7 @@ class TreePrinter:
         print("| " * indent + "ELSE")
         self.else_body.printTree(indent + 1)
 
-    @addToClass(AST.ForLoop)
+    @addToClass(AST.For)
     def printTree(self, indent=0):
         print("| " * indent + "FOR")
         indent += 1
@@ -61,7 +61,7 @@ class TreePrinter:
         self.end.printTree(indent + 1)
         self.body.printTree(indent)
 
-    @addToClass(AST.WhileLoop)
+    @addToClass(AST.While)
     def printTree(self, indent=0):
         print("| " * indent + "WHILE")
         indent += 1
