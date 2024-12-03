@@ -37,30 +37,34 @@ class MyParser(Parser):
 
     @_('assignable "=" expr ";"')
     def instruction(self, p):
-        return Assignment(p[1], p.assignable, p.expr)
+        return AssignmentOrCreation(p[1], p.assignable, p.expr, p.lineno)
 
     @_('assignable ADD_ASSIGN expr ";"',
        'assignable SUB_ASSIGN expr ";"',
        'assignable MUL_ASSIGN expr ";"',
        'assignable DIV_ASSIGN expr ";"')
     def instruction(self, p):
-        return Assignment(p[1], p.assignable, p.expr)
+        return Assignment(p[1], p.assignable, p.expr, p.lineno)
 
     @_('ID "[" expr "," expr "]"')
     def assignable(self, p):
-        return ArrayAccess(Variable(p.ID), p[2], p[4])
+        return ArrayAccess(Variable(p.ID), p[2], p[4], p.lineno)
+
+    @_('ID "[" expr "]"')
+    def assignable(self, p):
+        return ArrayAccess(Variable(p.ID, p.lineno), p[2], None, p.lineno)
 
     @_("ID")
     def assignable(self, p):
-        return Variable(p.ID)
+        return Variable(p.ID, p.lineno)
 
     @_('IF "(" condition ")" block ELSE block')
     def instruction(self, p):
-        return IfElse(p.condition, p.block0, p.block1)
+        return IfElseStatement(p.condition, p.block0, p.block1, p.lineno)
 
     @_('IF "(" condition ")" block %prec IFX')
     def instruction(self, p):
-        return If(p.condition, p.block)
+        return IfStatement(p.condition, p.block, p.lineno)
 
     @_('expr "<" expr',
        'expr ">" expr',
@@ -69,43 +73,40 @@ class MyParser(Parser):
        'expr NONEQUAL expr',
        'expr EQUAL expr', )
     def condition(self, p):
-        return BinExpr(p[1], p.expr0, p.expr1)
+        return BinExpr(p[1], p.expr0, p.expr1, p.lineno)
 
     @_('FOR ID "=" expr ":" expr block')
     def instruction(self, p):
-        return For(Variable(p.ID), p.expr0, p.expr1, p.block)
+        return ForLoop(Variable(p.ID, p.lineno), p.expr0, p.expr1, p.block, p.lineno)
 
     @_('WHILE "(" condition ")" block')
     def instruction(self, p):
-        return While(p.condition, p.block)
+        return WhileLoop(p.condition, p.block, p.lineno)
 
     @_('BREAK ";"')
     def instruction(self, p):
-        return Break
+        return Break(p.lineno)
 
     @_('CONTINUE ";"')
     def instruction(self, p):
-        return Continue
+        return Continue(p.lineno)
 
     @_('"{" instructions "}"')
     def block(self, p):
-        return Block(p.instructions)
+        return Block(p.instructions,p.lineno)
 
     @_('instruction')
     def block(self, p):
-        return Block([p.instruction])
+        return Block([p.instruction], p.lineno)
 
     @_('RETURN expr ";"')
     def instruction(self, p):
-        pass
-
-    @_('PRINT STRING ";"')
-    def instruction(self, p):
-        return Print([String(p.STRING)])
+        return Return(p.expr, p.lineno)
 
     @_('PRINT sequence_element ";"')
     def instruction(self, p):
-        return Print(p.sequence_element)
+        return Print(p.sequence_element, p.lineno)
+
 
     @_('ID "," sequence_element')
     def sequence_element(self, p):
@@ -113,7 +114,11 @@ class MyParser(Parser):
 
     @_('ID')
     def sequence_element(self, p):
-        return [Variable(p.ID)]
+        return [Variable(p.ID, p.lineno)]
+
+    @_('STRING')
+    def sequence_element(self, p):
+        return [String(p[0], p.lineno)]
 
     @_('expr "+" expr',
        'expr "-" expr',
@@ -125,16 +130,16 @@ class MyParser(Parser):
        'expr DOT_DIV expr',
        )
     def expr(self, p):
-        return BinExpr(p[1], p[0], p[2])
+        return BinExpr(p[1], p[0], p[2], p.lineno)
 
     # minus unarny
     @_('"-" expr %prec UMINUS')
     def expr(self, p):
-        return UnaryExpr(p[0], p.expr)
+        return UnaryExpr(p[0], p.expr, p.lineno)
 
     @_('expr "\'"')
     def expr(self, p):
-        return UnaryExpr('transpose', p.expr)
+        return UnaryExpr('transpose', p.expr, p.lineno)
 
     @_('"(" expr ")"')
     def expr(self, p):
@@ -142,29 +147,29 @@ class MyParser(Parser):
 
     @_('FLOATNUM')
     def expr(self, p):
-        return FloatNum(p[0])
+        return Number(p[0], p.lineno)
 
     @_('INTNUM')
     def expr(self, p):
-        return IntNum(p[0])
+        return Number(p[0], p.lineno)
 
     @_("STRING")
     def expr(self, p):
-        return String(p.STRING)
+        return String(p.STRING, p.lineno)
 
     @_('ID')
     def expr(self, p):
-        return Variable(p.ID)
+        return Variable(p.ID, p.lineno)
 
     @_('ZEROS "(" expr ")"',
        'ONES "(" expr ")"',
        'EYE "(" expr ")"')
     def expr(self, p):
-        return FunctionOnMatrix(p[0], p.expr)
+        return MatrixFunction(p[0], p.expr, p.lineno)
 
     @_('"[" array_element "]"')
     def expr(self, p):
-        return MakeArray(p.array_element)
+        return ArrayCreation(p.array_element, p.lineno)
 
     @_('expr "," array_element')
     def array_element(self, p):

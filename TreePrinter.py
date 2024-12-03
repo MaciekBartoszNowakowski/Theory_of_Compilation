@@ -35,14 +35,14 @@ class TreePrinter:
     def printTree(self, indent=0):
         print("| " * indent + str(self.name))
 
-    @addToClass(AST.If)
+    @addToClass(AST.IfStatement)
     def printTree(self, indent=0):
         print("| " * indent + "IF")
         self.condition.printTree(indent + 1)
         print("| " * indent + "THEN")
         self.body.printTree(indent + 1)
 
-    @addToClass(AST.IfElse)
+    @addToClass(AST.IfElseStatement)
     def printTree(self, indent=0):
         print("| " * indent + "IF")
         self.condition.printTree(indent + 1)
@@ -51,7 +51,7 @@ class TreePrinter:
         print("| " * indent + "ELSE")
         self.else_body.printTree(indent + 1)
 
-    @addToClass(AST.For)
+    @addToClass(AST.ForLoop)
     def printTree(self, indent=0):
         print("| " * indent + "FOR")
         indent += 1
@@ -61,7 +61,7 @@ class TreePrinter:
         self.end.printTree(indent + 1)
         self.body.printTree(indent)
 
-    @addToClass(AST.While)
+    @addToClass(AST.WhileLoop)
     def printTree(self, indent=0):
         print("| " * indent + "WHILE")
         indent += 1
@@ -86,20 +86,27 @@ class TreePrinter:
         self.target.printTree(indent + 1)
         self.value.printTree(indent + 1)
 
+    @addToClass(AST.AssignmentOrCreation)
+    def printTree(self, indent=0):
+        print("| " * indent + str(self.op))
+        self.target.printTree(indent + 1)
+        self.value.printTree(indent + 1)
+
     @addToClass(AST.ArrayAccess)
     def printTree(self, indent=0):
         print("| " * indent + "REF")
         indent += 1
         self.array.printTree(indent)
         self.row.printTree(indent)
-        self.col.printTree(indent)
+        if self.col != None:
+            self.col.printTree(indent + 1)
 
-    @addToClass(AST.FunctionOnMatrix)
+    @addToClass(AST.MatrixFunction)
     def printTree(self, indent=0):
         print("| " * indent + self.function)
         self.argument.printTree(indent + 1)
 
-    @addToClass(AST.MakeArray)
+    @addToClass(AST.ArrayCreation)
     def printTree(self, indent=0):
         print("| " * indent + "Vector")
         for element in self.elements:
@@ -132,3 +139,7 @@ class TreePrinter:
     @addToClass(AST.Error)
     def printTree(self, indent=0):
         pass
+
+    @addToClass(AST.Number)
+    def printTree(self, indent=0):
+        print("| " * indent + str(self.value))

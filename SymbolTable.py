@@ -1,3 +1,6 @@
+#!/usr/bin/python
+
+
 from time import sleep
 from symtable import Symbol
 
